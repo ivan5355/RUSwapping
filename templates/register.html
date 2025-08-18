@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Register - Rutgers Room Swap{% endblock %}
+
+{% block content %}
+<div class="form-section">
+    <h2>Create Your Account</h2>
+    <p style="text-align: center; margin-bottom: 30px; color: #ffdddd;">
+        Join Rutgers Room Swap to start finding your perfect housing match!
+    </p>
+    
+    <form id="registerForm">
+        <div class="form-row">
+            <div class="form-group">
+                <label for="name">Full Name:</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Rutgers Email:</label>
+                <input type="email" id="email" name="email" placeholder="username@scarletmail.rutgers.edu" required>
+                <small style="color: #ffdddd; font-size: 0.9rem;">Must be a valid @scarletmail.rutgers.edu email address</small>
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" required>
+                <small style="color: #ffdddd; font-size: 0.9rem;">Minimum 6 characters</small>
+            </div>
+            <div class="form-group">
+                <label for="confirmPassword">Confirm Password:</label>
+                <input type="password" id="confirmPassword" name="confirmPassword" required>
+            </div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 30px;">
+            <button type="submit" class="btn">Create Account</button>
+        </div>
+        
+        <div style="text-align: center; margin-top: 20px;">
+            <p style="color: #ffdddd;">
+                Already have an account? 
+                <a href="{{ url_for('auth.login') }}" style="color: #ffff99; text-decoration: underline;">Login here</a>
+            </p>
+        </div>
+    </form>
+</div>
+
+<script>
+document.getElementById('registerForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const password = formData.get('password');
+    const confirmPassword = formData.get('confirmPassword');
+    
+    // Client-side validation
+    if (password !== confirmPassword) {
+        showAlert('Passwords do not match!', 'error');
+        return;
+    }
+    
+    if (password.length < 6) {
+        showAlert('Password must be at least 6 characters long!', 'error');
+        return;
+    }
+    
+    const email = formData.get('email');
+    if (!email.endsWith('@scarletmail.rutgers.edu')) {
+        showAlert('Please use a valid @scarletmail.rutgers.edu email address!', 'error');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                name: formData.get('name'),
+                email: formData.get('email'),
+                password: formData.get('password')
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showAlert(data.message, 'success');
+            setTimeout(() => {
+                window.location.href = '/login';
+            }, 2000);
+        } else {
+            showAlert(data.error, 'error');
+        }
+    } catch (error) {
+        showAlert('An error occurred. Please try again.', 'error');
+    }
+});
+</script>
+{% endblock %} 

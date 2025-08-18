@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Rutgers Room Swap{% endblock %}
+
+{% block content %}
+<div class="form-section">
+    <h2>Welcome Back</h2>
+    <p style="text-align: center; margin-bottom: 30px; color: #ffdddd;">
+        Log in to your account to manage your room swap requests and find your perfect match!
+    </p>
+    
+    <form id="loginForm">
+        <div class="form-row">
+            <div class="form-group">
+                <label for="email">Email Address:</label>
+                <input type="email" 
+                       id="email" 
+                       name="email" 
+                       placeholder="username@scarletmail.rutgers.edu" 
+                       autocomplete="email"
+                       required>
+                <small style="color: #ffdddd; font-size: 0.9rem;">Use your Rutgers email address</small>
+                <div class="input-error" id="email-error" style="color: #ff6b6b; font-size: 0.85rem; margin-top: 5px; opacity: 0; transition: opacity 0.3s ease;"></div>
+            </div>
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <div class="password-input-wrapper" style="position: relative;">
+                    <input type="password" 
+                           id="password" 
+                           name="password" 
+                           placeholder="Enter your password"
+                           autocomplete="current-password"
+                           required>
+                    <button type="button" 
+                            class="password-toggle" 
+                            id="password-toggle" 
+                            aria-label="Toggle password visibility"
+                            style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; padding: 4px; border-radius: 4px; transition: background-color 0.2s ease; font-size: 1rem;">
+                        <span class="eye-icon" id="eye-icon">👁️</span>
+                    </button>
+                </div>
+                <div class="input-error" id="password-error" style="color: #ff6b6b; font-size: 0.85rem; margin-top: 5px; opacity: 0; transition: opacity 0.3s ease;"></div>
+            </div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 30px;">
+            <button type="submit" class="btn" id="login-btn">
+                <span class="btn-text">Login</span>
+                <span class="btn-loading" style="display: none;">
+                    <span class="loading-spinner" style="width: 18px; height: 18px; border: 2px solid rgba(255, 255, 255, 0.3); border-top: 2px solid white; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 8px;"></span>
+                    Logging In...
+                </span>
+            </button>
+        </div>
+        
+        <div style="text-align: center; margin-top: 20px;">
+            <p style="color: #ffdddd;">
+                Don't have an account? 
+                <a href="{{ url_for('auth.register') }}" style="color: #ffff99; text-decoration: underline;">Register here</a>
+            </p>
+        </div>
+    </form>
+</div>
+
+<style>
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.password-toggle:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.input-error.show {
+    opacity: 1 !important;
+}
+
+.btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.btn-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+</style>
+
+<script>
+// Password visibility toggle
+document.getElementById('password-toggle').addEventListener('click', function() {
+    const passwordInput = document.getElementById('password');
+    const eyeIcon = document.getElementById('eye-icon');
+    
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        eyeIcon.textContent = '🙈';
+    } else {
+        passwordInput.type = 'password';
+        eyeIcon.textContent = '👁️';
+    }
+});
+
+// Form validation
+function validateEmail(email) {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email) && (email.includes('rutgers.edu') || email.includes('scarletmail.rutgers.edu'));
+}
+
+function showError(fieldId, message) {
+    const errorElement = document.getElementById(fieldId + '-error');
+    errorElement.textContent = message;
+    errorElement.classList.add('show');
+}
+
+function clearError(fieldId) {
+    const errorElement = document.getElementById(fieldId + '-error');
+    errorElement.classList.remove('show');
+}
+
+function setLoading(isLoading) {
+    const btn = document.getElementById('login-btn');
+    const btnText = btn.querySelector('.btn-text');
+    const btnLoading = btn.querySelector('.btn-loading');
+    
+    if (isLoading) {
+        btnText.style.display = 'none';
+        btnLoading.style.display = 'flex';
+        btn.disabled = true;
+    } else {
+        btnText.style.display = 'block';
+        btnLoading.style.display = 'none';
+        btn.disabled = false;
+    }
+}
+
+// Real-time validation
+document.getElementById('email').addEventListener('blur', function() {
+    const email = this.value.trim();
+    if (email && !validateEmail(email)) {
+        showError('email', 'Please enter a valid Rutgers email address');
+    } else if (email) {
+        clearError('email');
+    }
+});
+
+document.getElementById('password').addEventListener('blur', function() {
+    const password = this.value;
+    if (password && password.length < 6) {
+        showError('password', 'Password must be at least 6 characters long');
+    } else if (password) {
+        clearError('password');
+    }
+});
+
+// Form submission
+document.getElementById('loginForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    
+    // Clear previous errors
+    clearError('email');
+    clearError('password');
+    
+    // Validate form
+    let isValid = true;
+    
+    if (!email) {
+        showError('email', 'Email address is required');
+        isValid = false;
+    } else if (!validateEmail(email)) {
+        showError('email', 'Please enter a valid Rutgers email address');
+        isValid = false;
+    }
+    
+    if (!password) {
+        showError('password', 'Password is required');
+        isValid = false;
+    } else if (password.length < 6) {
+        showError('password', 'Password must be at least 6 characters long');
+        isValid = false;
+    }
+    
+    if (!isValid) return;
+    
+    setLoading(true);
+    
+    try {
+        const response = await fetch('/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email, password })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showAlert(data.message, 'success');
+            setTimeout(() => {
+                window.location.href = data.redirect;
+            }, 1000);
+        } else {
+            setLoading(false);
+            if (data.field) {
+                showError(data.field, data.error);
+            } else {
+                showAlert(data.error, 'error');
+            }
+        }
+    } catch (error) {
+        setLoading(false);
+        showAlert('Network error. Please check your connection and try again.', 'error');
+    }
+});
+</script>
+{% endblock %} 
