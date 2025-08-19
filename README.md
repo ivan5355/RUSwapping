@@ -6,8 +6,8 @@
 
 ## 1) Create virtual environment
 - macOS/Linux:
-  - `python3 -m venv .venv`
-  - `source .venv/bin/activate`
+  - `python3 -m venv myvenv`
+  - `source myvenv/bin/activate`
 - Windows (PowerShell):
   - `py -3 -m venv .venv`
   - `.venv\Scripts\Activate.ps1`
@@ -26,12 +26,6 @@ SECRET_KEY=dev-secret
 ## 4) Run the app
 - `python app.py`
 - Visit `http://127.0.0.1:5000/`
-
-## 5) Use the app
-- Register with your Rutgers `@scarletmail.rutgers.edu` email
-- Log in
-- Create your swap request on the Dashboard
-- See mutual matches under "Your Matches"
 
 ## Notes
 - If using local MongoDB, ensure it is running before starting the app.
