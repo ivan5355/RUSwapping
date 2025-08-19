@@ -96,6 +96,21 @@ def logout():
     session.clear()
     return redirect(url_for('home'))
 
+@auth.route('/get-user-info', methods=['GET'])
+def get_user_info():
+	"""Get current user's information for display."""
+
+	current_user = get_current_user()
+	
+	if current_user:
+		return jsonify({
+			'id': current_user['id'],
+			'email': current_user['email'],
+			'name': current_user.get('name', 'User')
+		})
+	else:
+		return jsonify({'error': 'User not found'}), 404
+
 def login_required(f):
     """Decorator to require login for protected routes"""
     def decorated_function(*args, **kwargs):
