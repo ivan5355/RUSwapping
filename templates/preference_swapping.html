@@ -1,23 +1,21 @@
 {% extends "base.html" %}
 
-{% block title %}Dashboard - Rutgers Room Swap{% endblock %}
+{% block title %}Preference Swapping - Rutgers Room Swap{% endblock %}
 
 {% block content %}
 <div class="form-section">
     <div id="welcomeMessage" style="text-align: center; margin-bottom: 30px; padding: 20px; background: rgba(255, 255, 255, 0.1); border-radius: 10px;">
         <h1 style="color: #ffff99; margin-bottom: 10px;">Welcome, <span id="userDisplayName">User</span>!</h1>
-        <p style="color: #ffdddd; font-size: 1.1rem;">Ready to find your perfect housing swap?</p>
+        <p style="color: #ffdddd; font-size: 1.1rem;">Create a preference-based swap request with multiple choices!</p>
     </div>
 
-    <h2>Your Room Swap Request</h2>
+    <h2>Your Preference-Based Swap Request</h2>
     
     <!-- User Request Section -->
     <div id="userRequestSection">
         <div id="noRequest" style="text-align: center; color: #ffcccc;">
-            <p style="margin-bottom: 20px;">You haven't posted a swap request yet.</p>
-
-            <!-- User Request Button. When the user clicks this button, the form will be shown. -->
-            <button class="btn" onclick="showCreateForm()" id="createRequestBtn">Create Swap Request</button>
+            <p style="margin-bottom: 20px;">You haven't posted a preference-based swap request yet.</p>
+            <button class="btn" onclick="showCreateForm()" id="createRequestBtn">Create Preference Swap Request</button>
         </div>
         
         <div id="hasRequest" style="display: none;">
@@ -28,13 +26,11 @@
                 <button class="btn btn-secondary" onclick="showEditForm()" id="editRequestBtn">Edit Request</button>
                 <button class="btn btn-danger" onclick="deleteRequest()" id="deleteRequestBtn">Delete Request</button>
             </div>
-
         </div>
     </div>
 </div>
 
 <div class="form-section">
-
     <h2>Your Matches</h2>
     <div id="matchesSection">
         <div id="noMatches" style="text-align: center; color: #ffcccc;">
@@ -45,31 +41,10 @@
             <!-- Confirmed matches will be displayed here -->
         </div>
     </div>
-
-</div>
-
-<!-- Cycle Request Section -->
-<div class="form-section">
-    <h2>Your 2 and 3 ways swaps Request</h2>
-    <div id="cycleUserRequestSection">
-        <div id="cycleNoRequest" style="text-align: center; color: #ffcccc;">
-            <p style="margin-bottom: 20px;">You haven't posted a 2 and 3 ways swaps request yet.</p>
-            <button class="btn" onclick="showCycleCreateForm()" id="createCycleRequestBtn">Create 2 and 3 ways swaps Request</button>
-        </div>
-        <div id="cycleHasRequest" style="display: none;">
-            <div id="cycleUserRequestCard" class="listing-card">
-                <!-- User's cycle request will be displayed here -->
-            </div>
-            <div style="text-align: center; margin-top: 20px;">
-                <button class="btn btn-secondary" onclick="showCycleEditForm()" id="editCycleRequestBtn">Edit 2 and 3 ways swaps Request</button>
-                <button class="btn btn-danger" onclick="deleteCycleRequest()" id="deleteCycleRequestBtn">Delete 2 and 3 ways swaps Request</button>
-            </div>
-        </div>
-    </div>
 </div>
 
 <div class="form-section" id="createEditForm" style="display: none;">
-    <h2 id="formTitle">Create Swap Request</h2>
+    <h2 id="formTitle">Create Preference Swap Request</h2>
     <form id="swapForm">
         <div class="form-row">
             <div class="form-group">
@@ -214,92 +189,8 @@
             <button type="button" class="btn btn-secondary" onclick="hideForm()" style="margin-left: 10px;">Cancel</button>
         </div>
     </form>
-
-</div>
-
-<!-- Cycle Create/Edit Form -->
-<div class="form-section" id="cycleCreateEditForm" style="display: none;">
-    <h2 id="cycleFormTitle">Create 2 and 3 ways swaps Request</h2>
-    <form id="cycleForm">
-        <div class="form-row">
-            <div class="form-group">
-                <label for="cycleCurrentApartment">Current Apartment/Dorm:</label>
-                <select id="cycleCurrentApartment" name="cycleCurrentApartment" required>
-                    <option value="">Select your current housing</option>
-                    <option value="Davidson Hall D">Davidson Hall D</option>
-                    <option value="Buell Apartments">Buell Apartments</option>
-                    <option value="Frelinghuysen Apartments">Frelinghuysen Apartments</option>
-                    <option value="Johnson Apartments">Johnson Apartments</option>
-                    <option value="Marvin Apartments">Marvin Apartments</option>
-                    <option value="Starkey Apartments">Starkey Apartments</option>
-                    <option value="Silvers Apartments">Silvers Apartments</option>
-                    <option value="Honors College">Honors College</option>
-                    <option value="Stonier Hall">Stonier Hall</option>
-                    <option value="Tinsley Hall">Tinsley Hall</option>
-                    <option value="University Center at Easton Avenue">University Center at Easton Avenue</option>
-                    <option value="Wessels Hall">Wessels Hall</option>
-                    <option value="Leupp Hall">Leupp Hall</option>
-                    <option value="Mettler Hall">Mettler Hall</option>
-                    <option value="Pell Hall">Pell Hall</option>
-                    <option value="Sojourner Truth Apartments">Sojourner Truth Apartments</option>
-                    <option value="Helyar House">Helyar House</option>
-                    <option value="Henderson Apartments">Henderson Apartments</option>
-                    <option value="Jameson Hall">Jameson Hall</option>
-                    <option value="Katzenbach Hall">Katzenbach Hall</option>
-                    <option value="Lippincott Hall">Lippincott Hall</option>
-                    <option value="New Gibbons">New Gibbons</option>
-                    <option value="Newell Apartments">Newell Apartments</option>
-                    <option value="Livingston Apartments">Livingston Apartments</option>
-                    <option value="Lynton Towers North & South">Lynton Towers North & South</option>
-                    <option value="Quad I, II, III">Quad I, II, III</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="cycleCurrentRoom">Current Room/Unit:</label>
-                <input type="text" id="cycleCurrentRoom" name="cycleCurrentRoom" placeholder="e.g., Apt 4B, Room 302" required>
-            </div>
-        </div>
-
-        <div class="form-group">
-            <label for="desiredChoice">Desired Apartment/Dorm (Single Choice):</label>
-            <select id="desiredChoice" name="desiredChoice" required>
-                <option value="">Select desired housing</option>
-                <option value="Davidson Hall D">Davidson Hall D</option>
-                <option value="Buell Apartments">Buell Apartments</option>
-                <option value="Frelinghuysen Apartments">Frelinghuysen Apartments</option>
-                <option value="Johnson Apartments">Johnson Apartments</option>
-                <option value="Marvin Apartments">Marvin Apartments</option>
-                <option value="Starkey Apartments">Starkey Apartments</option>
-                <option value="Silvers Apartments">Silvers Apartments</option>
-                <option value="Honors College">Honors College</option>
-                <option value="Stonier Hall">Stonier Hall</option>
-                <option value="Tinsley Hall">Tinsley Hall</option>
-                <option value="University Center at Easton Avenue">University Center at Easton Avenue</option>
-                <option value="Wessels Hall">Wessels Hall</option>
-                <option value="Leupp Hall">Leupp Hall</option>
-                <option value="Mettler Hall">Mettler Hall</option>
-                <option value="Pell Hall">Pell Hall</option>
-                <option value="Sojourner Truth Apartments">Sojourner Truth Apartments</option>
-                <option value="Helyar House">Helyar House</option>
-                <option value="Henderson Apartments">Henderson Apartments</option>
-                <option value="Jameson Hall">Jameson Hall</option>
-                <option value="Katzenbach Hall">Katzenbach Hall</option>
-                <option value="Lippincott Hall">Lippincott Hall</option>
-                <option value="New Gibbons">New Gibbons</option>
-                <option value="Newell Apartments">Newell Apartments</option>
-                <option value="Livingston Apartments">Livingston Apartments</option>
-                <option value="Lynton Towers North & South">Lynton Towers North & South</option>
-                <option value="Quad I, II, III">Quad I, II, III</option>
-            </select>
-        </div>
-
-        <div style="text-align: center; margin-top: 30px;">
-            <button type="submit" class="btn" id="cycleSubmitBtn">Create 2 and 3 ways swaps Request</button>
-            <button type="button" class="btn btn-secondary" onclick="hideCycleForm()" style="margin-left: 10px;">Cancel</button>
-        </div>
-    </form>
 </div>
 
 <script src="{{ url_for('static', filename='js/dashboard-utils.js') }}"></script>
-<script src="{{ url_for('static', filename='js/dashboard-main.js') }}"></script>
+<script src="{{ url_for('static', filename='js/preference-swapping.js') }}"></script>
 {% endblock %} 

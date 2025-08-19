@@ -308,7 +308,8 @@
         {% if session.get('user_id') %}
         <nav class="nav">
             <ul>
-                <li><a href="{{ url_for('dashboard') }}" class="{% if request.endpoint == 'dashboard' %}active{% endif %}">Dashboard</a></li>
+                <li><a href="{{ url_for('preference_swapping') }}" class="{% if request.endpoint == 'preference_swapping' %}active{% endif %}">Preference Swapping</a></li>
+                <li><a href="{{ url_for('cycle_swapping') }}" class="{% if request.endpoint == 'cycle_swapping' %}active{% endif %}">Cycle Swapping</a></li>
                 <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
             </ul>
         </nav>

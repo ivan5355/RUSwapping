@@ -3,17 +3,11 @@ let currentRequestId = null;
 let lastUserRequest = null;
 let hasConfirmedMatches = false;
 
-// Cycle state
-let isCycleEditMode = false;
-let currentCycleRequestId = null;
-let lastCycleUserRequest = null;
-
 // Load data when page loads
 document.addEventListener('DOMContentLoaded', function() {
     loadUserInfo();
     loadUserRequest();
     loadMatches();
-    loadCycleUserRequest();
 });
 
 async function loadUserInfo() {
@@ -23,7 +17,6 @@ async function loadUserInfo() {
             const userData = await response.json();
             const userDisplayName = document.getElementById('userDisplayName');
             if (userDisplayName) {
-                // Use the full name from the user data
                 const fullName = userData.name || 'User';
                 userDisplayName.textContent = fullName;
             }
@@ -63,15 +56,8 @@ async function loadMatches() {
             throw new Error('Failed to load matches');
         }
         const matches = await response.json();
-        // Treat all returned matches as confirmed now
         const confirmed = matches;
         const limited = confirmed.slice(0, 5);
-
-        // Show/hide confirmed match notice
-        const confirmedMatchNotice = document.getElementById('confirmedMatchNotice');
-        if (confirmedMatchNotice) {
-            confirmedMatchNotice.style.display = confirmed.length > 0 ? 'block' : 'none';
-        }
 
         hasConfirmedMatches = confirmed.length > 0;
 
@@ -85,28 +71,10 @@ async function loadMatches() {
                 createRequestBtn.style.cursor = 'not-allowed';
             } else {
                 createRequestBtn.disabled = false;
-                createRequestBtn.textContent = 'Create Swap Request';
+                createRequestBtn.textContent = 'Create Preference Swap Request';
                 createRequestBtn.style.opacity = '1';
                 createRequestBtn.style.cursor = 'pointer';
             }
-        }
-
-        // Disable edit and delete buttons if user has confirmed match
-        const editRequestBtn = document.getElementById('editRequestBtn');
-        const deleteRequestBtn = document.getElementById('deleteRequestBtn');
-        
-        if (editRequestBtn) {
-            editRequestBtn.disabled = false;
-            editRequestBtn.textContent = 'Edit Request';
-            editRequestBtn.style.opacity = '1';
-            editRequestBtn.style.cursor = 'pointer';
-        }
-        
-        if (deleteRequestBtn) {
-            deleteRequestBtn.disabled = false;
-            deleteRequestBtn.textContent = 'Delete Request';
-            deleteRequestBtn.style.opacity = '1';
-            deleteRequestBtn.style.cursor = 'pointer';
         }
 
         const noMatches = document.getElementById('noMatches');
@@ -152,25 +120,6 @@ async function loadMatches() {
             `;
             }).join('');
         }
-
-        // Hide Potential and Pending sections (feature removed)
-        const noPotential = document.getElementById('noPotential');
-        const potentialList = document.getElementById('potentialList');
-        const potentialSection = document.getElementById('potentialSection');
-        if (noPotential) noPotential.style.display = 'none';
-        if (potentialList) { potentialList.style.display = 'none'; potentialList.innerHTML = ''; }
-        if (potentialSection) potentialSection.style.display = 'none';
-
-        const noPending = document.getElementById('noPending');
-        const outgoingWrap = document.getElementById('outgoingPending');
-        const incomingWrap = document.getElementById('incomingPending');
-        const outgoingList = document.getElementById('outgoingPendingList');
-        const incomingList = document.getElementById('incomingPendingList');
-        if (noPending) noPending.style.display = 'none';
-        if (outgoingWrap) outgoingWrap.style.display = 'none';
-        if (incomingWrap) incomingWrap.style.display = 'none';
-        if (outgoingList) outgoingList.innerHTML = '';
-        if (incomingList) incomingList.innerHTML = '';
     } catch (error) {
         console.error('Error loading matches:', error);
     }
@@ -183,7 +132,7 @@ function showCreateForm() {
     }
     
     isEditMode = false;
-    document.getElementById('formTitle').textContent = 'Create Swap Request';
+    document.getElementById('formTitle').textContent = 'Create Preference Swap Request';
     document.getElementById('submitBtn').textContent = 'Create Request';
     document.getElementById('swapForm').reset();
     positionFormInline();
@@ -194,10 +143,9 @@ function showCreateForm() {
 
 function showEditForm() {
     isEditMode = true;
-    document.getElementById('formTitle').textContent = 'Edit Swap Request';
+    document.getElementById('formTitle').textContent = 'Edit Preference Swap Request';
     document.getElementById('submitBtn').textContent = 'Update Request';
 
-    // Prefill form from last loaded user request
     if (lastUserRequest) {
         document.getElementById('currentApartment').value = lastUserRequest.current_apartment || '';
         document.getElementById('currentRoom').value = lastUserRequest.current_room || '';
@@ -217,7 +165,7 @@ function hideForm() {
 }
 
 async function deleteRequest() {
-    if (!confirm('Are you sure you want to delete your swap request?')) {
+    if (!confirm('Are you sure you want to delete your preference swap request?')) {
         return;
     }
     
@@ -244,7 +192,6 @@ async function deleteRequest() {
 document.getElementById('swapForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     
-    // Check if user already has a confirmed match
     if (hasConfirmedMatches) {
         showAlert('You cannot create a new request while you have a confirmed match.', 'error');
         return;
@@ -286,108 +233,4 @@ document.getElementById('swapForm').addEventListener('submit', async function(e)
     } catch (error) {
         showAlert('Error saving request', 'error');
     }
-});
-
-// ---- Cycle request logic ----
-async function loadCycleUserRequest() {
-    try {
-        const response = await fetch('/get-cycle-requests');
-        const requests = await response.json();
-        const userRequest = Array.isArray(requests) ? requests.find(req => req.is_own) : null;
-        if (userRequest) {
-            lastCycleUserRequest = userRequest;
-            currentCycleRequestId = userRequest.id;
-            displayCycleUserRequest(userRequest);
-            document.getElementById('cycleNoRequest').style.display = 'none';
-            document.getElementById('cycleHasRequest').style.display = 'block';
-        } else {
-            lastCycleUserRequest = null;
-            document.getElementById('cycleNoRequest').style.display = 'block';
-            document.getElementById('cycleHasRequest').style.display = 'none';
-        }
-    } catch (error) {
-        console.error('Error loading cycle user request:', error);
-    }
-}
-
-function showCycleCreateForm() {
-    isCycleEditMode = false;
-    document.getElementById('cycleFormTitle').textContent = 'Create Cycle Request';
-    document.getElementById('cycleSubmitBtn').textContent = 'Create Cycle Request';
-    document.getElementById('cycleForm').reset();
-    positionCycleFormInline();
-    const formEl = document.getElementById('cycleCreateEditForm');
-    formEl.style.display = 'block';
-    formEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-
-function showCycleEditForm() {
-    isCycleEditMode = true;
-    document.getElementById('cycleFormTitle').textContent = 'Edit Cycle Request';
-    document.getElementById('cycleSubmitBtn').textContent = 'Update Cycle Request';
-
-    if (lastCycleUserRequest) {
-        document.getElementById('cycleCurrentApartment').value = lastCycleUserRequest.current_apartment || '';
-        document.getElementById('cycleCurrentRoom').value = lastCycleUserRequest.current_room || '';
-        document.getElementById('desiredChoice').value = lastCycleUserRequest.desired_choice || '';
-    }
-
-    positionCycleFormInline();
-    const formEl = document.getElementById('cycleCreateEditForm');
-    formEl.style.display = 'block';
-    formEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-
-function hideCycleForm() {
-    document.getElementById('cycleCreateEditForm').style.display = 'none';
-}
-
-async function deleteCycleRequest() {
-    if (!confirm('Are you sure you want to delete your cycle request?')) {
-        return;
-    }
-    try {
-        const response = await fetch(`/delete-cycle-requests/${currentCycleRequestId}`, { method: 'DELETE' });
-        if (response.ok) {
-            showAlert('Cycle request deleted successfully!', 'success');
-            currentCycleRequestId = null;
-            lastCycleUserRequest = null;
-            loadCycleUserRequest();
-        } else {
-            const data = await response.json();
-            showAlert(data.error || 'Error deleting cycle request', 'error');
-        }
-    } catch (error) {
-        showAlert('Error deleting cycle request', 'error');
-    }
-}
-
-document.getElementById('cycleForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    const formData = new FormData(e.target);
-    const requestData = {
-        current_apartment: formData.get('cycleCurrentApartment'),
-        current_room: formData.get('cycleCurrentRoom'),
-        desired_choice: formData.get('desiredChoice')
-    };
-    try {
-        const url = isCycleEditMode ? '/update-cycle-request' : '/create-cycle-request';
-        const payload = isCycleEditMode ? { ...requestData, request_id: currentCycleRequestId } : requestData;
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-        const data = await response.json();
-        if (response.ok) {
-            showAlert(data.message, 'success');
-            hideCycleForm();
-            loadCycleUserRequest();
-        } else {
-            showAlert(data.error || 'Error saving cycle request', 'error');
-        }
-    } catch (error) {
-        showAlert('Error saving cycle request', 'error');
-    }
-});
-
+}); 

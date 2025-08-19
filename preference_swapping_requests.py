@@ -15,12 +15,13 @@ db = client["RUSwapping"]
 
 swap_requests_collection = db['swap_requests']
 
-swap_requests_bp = Blueprint('swap_requests', __name__)
+pref_swap_requests_bp = Blueprint('pref_swap_requests', __name__)
 
-@swap_requests_bp.route('/create-request', methods=['POST'])
+@pref_swap_requests_bp.route('/create-request', methods=['POST'])
 @login_required
 def create_request():
 	"""Create a new swap request for the current user."""
+    
 	current_user = get_current_user()
 	request_data = request.get_json(silent=True) or request.form
 	if not request_data:
@@ -59,7 +60,7 @@ def create_request():
 	res = swap_requests_collection.insert_one(doc)
 	return jsonify({'message': 'Swap request created successfully!', 'request_id': str(res.inserted_id)}), 201
 
-@swap_requests_bp.route('/delete-request', methods=['POST'])
+@pref_swap_requests_bp.route('/delete-request', methods=['POST'])
 @login_required
 def delete_request():
 	"""Delete a swap request for the current user."""
@@ -73,7 +74,7 @@ def delete_request():
 		return jsonify({'error': 'Request not found or not authorized'}), 404
 	return jsonify({'message': 'Swap request deleted successfully!'}), 200
 
-@swap_requests_bp.route('/update-request', methods=['POST'])
+@pref_swap_requests_bp.route('/update-request', methods=['POST'])
 @login_required
 def update_request():
 	"""Update a swap request for the current user."""
@@ -120,7 +121,7 @@ def update_request():
 	else:
 		return jsonify({'message': 'No changes applied'}), 200 
 
-@swap_requests_bp.route('/get-requests', methods=['GET'])
+@pref_swap_requests_bp.route('/get-requests', methods=['GET'])
 @login_required
 def get_request():
 	"""Return the current user's active swap request."""
@@ -137,7 +138,7 @@ def get_request():
 	else:
 		return jsonify([]) 
 
-@swap_requests_bp.route('/delete-requests/<request_id>', methods=['DELETE'])
+@pref_swap_requests_bp.route('/delete-requests/<request_id>', methods=['DELETE'])
 @login_required
 def delete_swap_request(request_id):
 	"""Delete a swap request permanently (matches frontend DELETE call)."""
@@ -152,6 +153,70 @@ def delete_swap_request(request_id):
 			{'other_user_id': current_user['id']}
 		]
 	})
+
 	if result.deleted_count == 0:
 		return jsonify({'error': 'Request not found or not authorized'}), 404
+
 	return jsonify({'message': 'Request deleted successfully'}), 200 
+
+	# Additional endpoints for frontend functionality
+@pref_swap_requests_bp.route('/get-matches', methods=['GET'])
+@login_required
+def get_matches():
+	"""Get mutual matches for the current user."""
+	current_user = get_current_user()
+	if not current_user:
+		return jsonify([])
+
+	# Fetch current user's active swap request
+	my_request = swap_requests_collection.find_one({
+		'user_id': current_user['id'],
+		'type': 'swap_request'
+	})
+	if not my_request:
+		return jsonify([])
+
+	my_current_apartment = my_request.get('current_apartment')
+	my_prefs = (my_request.get('preferences') or {})
+	my_choices = [
+		my_prefs.get('first_choice'),
+		my_prefs.get('second_choice'),
+		my_prefs.get('third_choice')
+	]
+
+	matches = []
+
+	# loop through all users except my user
+	for other_user in users_collection.find():
+		if other_user.get('_id') == current_user['id']:
+			continue
+
+		other_user_prefs = (other_user.get('preferences') or {})
+		other_user_current_apartment = other_user.get('current_apartment')
+	
+		other_user_choices = [
+			other_user_prefs.get('first_choice'),
+			other_user_prefs.get('second_choice'),
+			other_user_prefs.get('third_choice')
+		]
+		
+		for choice in other_user_choices:
+			if choice == my_current_apartment:
+				other_user_wants_my_level = other_user_choices.index(choice) + 1
+				break
+
+		for choice in my_choices:
+			if choice == other_user_current_apartment:
+				my_user_wants_other_level = my_choices.index(choice) + 1
+				break
+
+		if other_user_wants_my_level and my_user_wants_other_level:
+			matches.append({
+				'other_user_id': other_user.get('_id'),
+				'other_user_name': other_user.get('name'),
+				'other_user_current_apartment': other_user_current_apartment,
+				'my_user_wants_other_level': my_user_wants_other_level,
+				'other_user_email_display': other_user.get('email', '')
+			})
+
+	return jsonify(matches)
