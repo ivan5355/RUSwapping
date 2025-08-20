@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 from datetime import datetime
 from pymongo import MongoClient
 from bson import ObjectId
-from auth import login_required, get_current_user
+from routes.auth import login_required, get_current_user
 import os
 
 load_dotenv()
@@ -14,6 +14,7 @@ client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=20000)
 db = client["RUSwapping"]
 
 swap_requests_collection = db['swap_requests']
+users_collection = db['users']
 
 pref_swap_requests_bp = Blueprint('pref_swap_requests', __name__)
 
@@ -186,37 +187,51 @@ def get_matches():
 
 	matches = []
 
-	# loop through all users except my user
-	for other_user in users_collection.find():
-		if other_user.get('_id') == current_user['id']:
+	# Loop through all other users' swap requests (exclude non-swap documents and self)
+	for other_request in swap_requests_collection.find({'type': 'swap_request'}):
+		# Skip own document
+		if other_request.get('user_id') == current_user['id']:
 			continue
 
-		other_user_prefs = (other_user.get('preferences') or {})
-		other_user_current_apartment = other_user.get('current_apartment')
-	
-		other_user_choices = [
-			other_user_prefs.get('first_choice'),
-			other_user_prefs.get('second_choice'),
-			other_user_prefs.get('third_choice')
+		other_prefs = (other_request.get('preferences') or {})
+		other_current_apartment = other_request.get('current_apartment')
+
+		other_choices = [
+			other_prefs.get('first_choice'),
+			other_prefs.get('second_choice'),
+			other_prefs.get('third_choice')
 		]
-		
-		for choice in other_user_choices:
-			if choice == my_current_apartment:
-				other_user_wants_my_level = other_user_choices.index(choice) + 1
-				break
 
-		for choice in my_choices:
-			if choice == other_user_current_apartment:
-				my_user_wants_other_level = my_choices.index(choice) + 1
-				break
+		# Determine each side's preference levels
+		other_pref_level = None
+		my_pref_level = None
 
-		if other_user_wants_my_level and my_user_wants_other_level:
+		if my_current_apartment in other_choices:
+			other_pref_level = other_choices.index(my_current_apartment) + 1
+
+		if other_current_apartment in my_choices:
+			my_pref_level = my_choices.index(other_current_apartment) + 1
+
+		# Mutual match if both have each other in preferences
+		if other_pref_level is not None and my_pref_level is not None:
+			other_user_email_display = other_request.get('user_email_display') or other_request.get('email', '')
+			if not other_user_email_display:
+				try:
+					other_user_id_str = other_request.get('user_id')
+					if other_user_id_str:
+						other_user_doc = users_collection.find_one({'_id': ObjectId(other_user_id_str)})
+						if other_user_doc:
+							other_user_email_display = other_user_doc.get('email', '')
+				except Exception:
+					pass
+
 			matches.append({
-				'other_user_id': other_user.get('_id'),
-				'other_user_name': other_user.get('name'),
-				'other_user_current_apartment': other_user_current_apartment,
-				'my_user_wants_other_level': my_user_wants_other_level,
-				'other_user_email_display': other_user.get('email', '')
+				'other_user_id': other_request.get('user_id') or str(other_request.get('_id')),
+				'other_user_name': other_request.get('user_name') or other_request.get('name', ''),
+				'other_current_apartment': other_current_apartment,
+				'other_current_room': other_request.get('current_room', ''),
+				'my_preference_level': my_pref_level,
+				'other_user_email_display': other_user_email_display
 			})
 
-	return jsonify(matches)
+	return jsonify(matches) 
