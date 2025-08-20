@@ -7,6 +7,7 @@ let lastCycleUserRequest = null;
 document.addEventListener('DOMContentLoaded', function() {
     loadUserInfo();
     loadCycleUserRequest();
+    loadCycleMatches();
 });
 
 async function loadUserInfo() {
@@ -43,6 +44,63 @@ async function loadCycleUserRequest() {
         }
     } catch (error) {
         console.error('Error loading cycle user request:', error);
+    }
+}
+
+async function loadCycleMatches() {
+    try {
+        const response = await fetch('/get-cycle-matches');
+        const matches = await response.json();
+        const noMatches = document.getElementById('cycleNoMatches');
+        const matchesList = document.getElementById('cycleMatchesList');
+
+        if (!Array.isArray(matches) || matches.length === 0) {
+            noMatches.style.display = 'block';
+            matchesList.style.display = 'none';
+            matchesList.innerHTML = '';
+            return;
+        }
+
+        noMatches.style.display = 'none';
+        matchesList.style.display = 'grid';
+
+        matchesList.innerHTML = matches.map(m => {
+            if (m.match_type === 'direct_swap') {
+                return `
+                <div class="listing-card">
+                    <div class="listing-header">
+                        <div class="listing-title">Direct Swap Available</div>
+                        <span class="match-indicator">Direct</span>
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <strong>They are at:</strong> ${m.other_current_apartment || ''}
+                        ${m.other_current_room ? ` (${m.other_current_room})` : ''}
+                    </div>
+                    <div class="contact-info">
+                        <strong>Contact:</strong> ${m.other_user_email_display || 'Email not available'}
+                    </div>
+                </div>`;
+            } else if (m.match_type === 'three_way_chain') {
+                return `
+                <div class="listing-card">
+                    <div class="listing-header">
+                        <div class="listing-title">3-Way Chain Possible</div>
+                        <span class="match-indicator">Chain</span>
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <div><strong>Person 1 (You want):</strong> ${m.other_current_apartment || ''}${m.other_current_room ? ` (${m.other_current_room})` : ''}</div>
+                        <div><strong>Person 2 (Completes chain):</strong> ${m.third_current_apartment || ''}${m.third_current_room ? ` (${m.third_current_room})` : ''}</div>
+                    </div>
+                    <div class="contact-info">
+                        <div><strong>Person 1 Contact:</strong> ${m.other_user_email_display || 'Email not available'}</div>
+                        <div><strong>Person 2 Contact:</strong> ${m.third_user_email_display || 'Email not available'}</div>
+                    </div>
+                </div>`;
+            }
+            return '';
+        }).join('');
+    } catch (error) {
+        console.error('Error loading cycle matches:', error);
     }
 }
 
@@ -89,6 +147,7 @@ async function deleteCycleRequest() {
             currentCycleRequestId = null;
             lastCycleUserRequest = null;
             loadCycleUserRequest();
+            loadCycleMatches();
         } else {
             const data = await response.json();
             showAlert(data.error || 'Error deleting cycle swap request', 'error');
@@ -119,6 +178,7 @@ document.getElementById('cycleForm').addEventListener('submit', async function(e
             showAlert(data.message, 'success');
             hideCycleForm();
             loadCycleUserRequest();
+            loadCycleMatches();
         } else {
             showAlert(data.error || 'Error saving cycle swap request', 'error');
         }

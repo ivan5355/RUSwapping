@@ -49,6 +49,7 @@ def create_request():
 		'user_name': current_user['name'],
 		'current_apartment': current_apartment,
 		'current_room': current_room,
+		'email': current_user['email'],
 		'preferences': {
 			'first_choice': first_choice,
 			'second_choice': second_choice,
@@ -214,16 +215,9 @@ def get_matches():
 
 		# Mutual match if both have each other in preferences
 		if other_pref_level is not None and my_pref_level is not None:
-			other_user_email_display = other_request.get('user_email_display') or other_request.get('email', '')
-			if not other_user_email_display:
-				try:
-					other_user_id_str = other_request.get('user_id')
-					if other_user_id_str:
-						other_user_doc = users_collection.find_one({'_id': ObjectId(other_user_id_str)})
-						if other_user_doc:
-							other_user_email_display = other_user_doc.get('email', '')
-				except Exception:
-					pass
+			
+			other_user_email_display = other_request.get('email', '')
+			
 
 			matches.append({
 				'other_user_id': other_request.get('user_id') or str(other_request.get('_id')),
